@@ -29,21 +29,17 @@ defineProps({
 
       <hr />
 
+      <div v-if="info.excerpt" class="excerpt" v-html="info.excerpt" />
+
       <div class="article-info">
-        <span v-if="info.author" class="author">Author: {{ info.author }}</span>
+        <!-- <span v-if="info.author" class="author">Author: {{ info.author }}</span> -->
 
         <span v-if="info.date && !isTimeline" class="date"
-          >Date: {{ new Date(info.date).toLocaleDateString() }}</span
+          >{{ new Date(info.date).toLocaleDateString() }}</span
         >
 
-        <span v-if="info.category" class="category"
-          >Category: {{ info.category.join(', ') }}</span
-        >
-
-        <span v-if="info.tag" class="tag">Tag: {{ info.tag.join(', ') }}</span>
+        <span v-if="info.tag" class="tag">{{ info.tag.join(' ') }}</span>
       </div>
-
-      <div v-if="info.excerpt" class="excerpt" v-html="info.excerpt" />
     </article>
   </div>
 </template>
@@ -64,9 +60,9 @@ defineProps({
   width: 100%;
   margin: 0 auto 1.25rem;
   padding: 1rem 1.25rem;
-  border: 1px solid var(--c-border);
   border-radius: 0.4rem;
   color: var(--c-text);
+  background: var(--c-bg-light);
 
   text-align: start;
 
@@ -83,8 +79,9 @@ defineProps({
 
     display: inline-block;
 
-    font-size: 1.28rem;
+    font-size: 1.5rem;
     line-height: 2rem;
+    font-weight: bold;
 
     &::after {
       content: '';
@@ -118,7 +115,9 @@ defineProps({
 
   .article-info {
     display: flex;
+    justify-content: space-between;
     flex-shrink: 0;
+    color: var(--c-text-quote);
 
     > span {
       margin-inline-end: 0.5em;
