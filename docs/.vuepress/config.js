@@ -10,7 +10,13 @@ export default defineUserConfig({
   title: 'YasinChan 的博客',
   description: 'Yasinchan 记录前端生活',
   head: [
-    ['link', { rel: 'icon', href: '/logo.png' }],
+    [
+      'link',
+      {
+        rel: 'icon',
+        href: 'https://file.yasinchan.com/rPAaaJxvP0KoTDILIYwSfGxWjUT51d8X/D018B6FFE06A79F3EE14730D88214BEE.png',
+      },
+    ],
     ['script', { src: '/iconfont.js' }],
     [
       'script',
@@ -32,7 +38,7 @@ export default defineUserConfig({
   ],
 
   theme: defaultTheme({
-    logo: 'https://yasinchan.com/logo.png',
+    logo: 'https://file.yasinchan.com/rPAaaJxvP0KoTDILIYwSfGxWjUT51d8X/D018B6FFE06A79F3EE14730D88214BEE.png',
 
     navbar: [
       {
