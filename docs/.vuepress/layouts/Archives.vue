@@ -32,7 +32,6 @@ items.forEach(item => {
   }
 });
 
-console.log(state.items);
 </script>
 
 <template>

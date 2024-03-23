@@ -4,7 +4,7 @@ import ParentLayout from '@vuepress/theme-default/layouts/Layout.vue'
 import ArticleList from '../components/ArticleList.vue'
 
 const articles = useBlogType('post')
-console.log(articles);
+
 </script>
 
 <template>
