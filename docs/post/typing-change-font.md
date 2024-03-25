@@ -1,5 +1,12 @@
 ---
 date: 2024-03-24
+head:
+  - - meta
+    - name: keywords
+      content: typing, 主题, theme
+  - - meta
+    - name: description
+      content: https://typing.yasinchan.com/ 主题切换介绍
 tag:
   - typing
   - link preload
@@ -14,11 +21,11 @@ excerpt: <p>打字网站 <a href="https://typing.yasinchan.com" target="_blank">
 
 地址：[https://typing.yasinchan.com](https://typing.yasinchan.com)
 
-# 通用模块
-
-## 切换字体
+源码：[https://github.com/YasinChan/typing](https://github.com/YasinChan/typing)
 
 ![](https://file.yasinchan.com/Ah4n6YhrHtTazLbAGidp2oNzwttOiUFb/766579006.png)
+
+## 切换字体
 
 正如[前文](/post/typing-intr.html)所言，本站是个文字为主的站点，所以对于文字本身可以做更多的定制，字体则是其中一个可以改变的点。
 

@@ -1,5 +1,12 @@
 ---
 date: 2024-03-23
+head:
+  - - meta
+    - name: keywords
+      content: typing, 主题, theme
+  - - meta
+    - name: description
+      content: https://typing.yasinchan.com/ 主题切换介绍
 tag:
   - typing
   - change-theme
@@ -11,6 +18,8 @@ excerpt: <p>打字网站 <a href="https://typing.yasinchan.com" target="_blank">
 # Typing 项目技术总结 - 通用模块（主题切换系列）
 
 地址：[https://typing.yasinchan.com](https://typing.yasinchan.com)
+
+源码：[https://github.com/YasinChan/typing](https://github.com/YasinChan/typing)
 
 > 这是一个简约风格的可自定义主题的打字记录和键盘测试网站，可以用来测试打字速度，统计打字错误率，支持回放打字过程，支持排行榜，支持联机比一比功能。同时也支持自定义主题，切换字体，以及登录记录数据等等功能。网站也包含一套用户反馈系统记录反馈信息。
 
