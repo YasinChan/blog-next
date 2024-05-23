@@ -393,3 +393,28 @@ function replacePunctuationWithSpace(input: string): string {
   return input.replace(punctuationRegex, ' ').replace(/\s+/g, ' '); // 连续空格替换为一个空格
 }
 ```
+
+## 异常情况处理
+
+在运行过程中出现过排行榜被人刷屏以及刷数据的情况，对此，我做了以下处理：
+
+### 刷数据情况处理
+
+遇到过排行榜被很多无效用户 id 刷屏的情况，为此，我在保存排行榜数据的接口中增加了中间件，来校验用户名和用户 id 是否一致从而验证用户准确性
+
+另外，还遇到过很多离谱数据的情况，这里我暂时只能将数据限制到合理范围内，超出范围的将会报错。
+
+### 刷屏情况
+
+这里我使用了 `koa2-ratelimit` 组件
+```js
+const RateLimit = require('koa2-ratelimit').RateLimit;
+
+const postSave = RateLimit.middleware({
+  interval: 30000,
+  max: 1, // limit each IP to 1 requests per 30s
+  message: "提交太频繁啦，30 秒之后再试吧！",
+  prefixKey: 'xxxx'
+});
+```
+根据 IP 地址限制提交频次。
