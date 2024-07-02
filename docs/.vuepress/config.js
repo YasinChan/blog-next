@@ -7,7 +7,7 @@ import { searchProPlugin } from 'vuepress-plugin-search-pro';
 export default defineUserConfig({
   lang: 'zh-CN',
 
-  title: 'YasinChan 的博客',
+  title: 'Yasinchan的自留地',
   description: 'Yasinchan 记录前端生活',
   head: [
     [
