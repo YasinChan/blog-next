@@ -1,15 +1,15 @@
 ## 我
 
 - 2017.7 毕业并开始从事前端开发工作
-- 目前就职于[TapTap](https://taptap.cn)。
-
-## 技术栈
-
-- `HTML`、`CSS`、`JavaScript`
-- 主力 js 框架`vue`
+- 先后就职于
+  - [意派科技](https://www.epub360.com/)（2017 ～ 2018）
+  - [TapTap](https://taptap.cn)（2018 ～ 2024）
+  - [领健医疗](https://www.linkedcare.cn/)（2024 ～ 至今）
 
 ## 好玩
 
+- 快见小程序  
+  ![qrcode](https://file.yasinchan.com/y5lADKfOvXQD909wMUojrqPXPS8slvCh/%E4%B8%8B%E8%BD%BD.png)
 - [Quick Meet](https://github.com/YasinChan/quick-meet)  
   一个可以快速找到聚会地点的网站！
 - [Typing](https://github.com/YasinChan/typing)  
@@ -17,6 +17,8 @@
 
 ## 轮子
 
+- [slate-canvas](https://github.com/YasinChan/slate-canvas)  
+  A rich text editor built on a canvas using Slate. [Demo](https://git.yasinchan.com/slate-canvas/)
 - [wechat-scroll-linkage](https://github.com/YasinChan/wechat-scroll-linkage)  
   微信小程序列表左右联动效果
 - [vue-verification-input](https://github.com/YasinChan/vue-verification-input)  
