@@ -25,19 +25,19 @@ excerpt: <p>打字网站 <a href="https://typing.yasinchan.com" target="_blank">
 
 ![](https://file.yasinchan.com/nS2xPufcI5TKM93b4N4a91oDAbPavS6F/2559139329.png)
 
-这是整个 [Typing](https://typing.yasinchan.com/) 最重要的一个模块，主要逻辑可以查看[文件路径](https://github.com/YasinChan/typing/blob/main/src/components/WordInput.vue)。
+字符输入是整个 [Typing](https://typing.yasinchan.com/) 最核心的模块，主要逻辑都集中在 [WordInput.vue](https://github.com/YasinChan/typing/blob/main/src/components/WordInput.vue)。
 
-主要涉及到几个点：
+整体上涉及以下几个部分：
 
 - 文案渲染
 - 输入框
-- 文案与输入内容绑定
-- 限时模式、计时模式、自定义模式下的特定逻辑和输入组件的绑定逻辑
-- 其他个性化功能逻辑
+- 文案与输入内容的绑定
+- 限时、计时、自定义三种模式下的特定逻辑与输入组件的衔接
+- 其他个性化功能
 
 ## 文案渲染
 
-在这里我定义了一个 [JSON 文件](https://github.com/YasinChan/typing/blob/main/src/files/Quote.json)用来储存文案，结构如下
+文案统一存放在一个 [JSON 文件](https://github.com/YasinChan/typing/blob/main/src/files/Quote.json) 中，结构如下：
 
 ```json
 {
@@ -71,9 +71,9 @@ excerpt: <p>打字网站 <a href="https://typing.yasinchan.com" target="_blank">
 }
 ```
 
-可以看到我分为了三种长度的文案类型，方便用户选择，在这文案的基础上的逻辑开发过程如下：
+可以看到，文案被分成了长、中、短三种长度，方便用户按需选择。
 
-需要明确的逻辑是用户在输入过程中，是需要记录已输入、输入错误、未输入的记录的，同时用户输入过程中的每个字都需要同步反映到文案上，所以文案中每个字都需要单独控制，所以我通过以下方式渲染到 HTML 上，代码查看[文件路径](https://github.com/YasinChan/typing/blob/e98a68a4cbe5c766d4ae260423bbac3814398b88/src/components/WordInput.vue#L431)
+在此基础上，输入过程中需要记录每个字的状态——已输入、输入错误、还未输入——并实时反映到文案上。这意味着文案里的每个字都需要被单独控制，所以渲染时为每个字都包了一层 `<span>`，[完整代码在这里](https://github.com/YasinChan/typing/blob/e98a68a4cbe5c766d4ae260423bbac3814398b88/src/components/WordInput.vue#L431)：
 
 ```html
 <!-- vue template 语法-->
@@ -87,11 +87,11 @@ excerpt: <p>打字网站 <a href="https://typing.yasinchan.com" target="_blank">
 </div>
 ```
 
-可以看出每个字都被 `<span>` 包裹，这样可以在每个 `<span>`上通过 **class** `is-wrong` 和 `is-input` 来达到不同状态的样式呈现。
+每个字都被 `<span>` 包裹后，就可以通过 `is-wrong`、`is-input` 这两个 class 来呈现不同状态的样式。
 
 ## 输入框
 
-输入框是基于 **div contenteditable** 实现，与上述渲染的文案排版逻辑是通过将两者的 `line-height` 设置为 **70px**，然后通过绝对定位的方式层叠渲染，使彼此的内容恰好在文案间隙中，达到流畅换行的目的。
+输入框基于 `div[contenteditable]` 实现。它和上面渲染的文案统一使用 `line-height: 70px`，再通过绝对定位的方式层叠在一起，让输入内容刚好落在文案的行间距里，从而实现流畅的换行效果。
 
 ```html
 <div
@@ -110,32 +110,32 @@ excerpt: <p>打字网站 <a href="https://typing.yasinchan.com" target="_blank">
 ></div>
 ```
 
-通过代码可以看到这里绑定了很多事件，这里主要目的是两个
+这里绑定了很多事件，目的主要有两点：
 
-1. 监听输入事件用于记录内容用于错误统计和回放功能
-2. 粘贴、撤销、反撤销、键盘选中等事件都需要取消掉，避免干扰情况
+1. 监听输入事件，记录内容，用于错误统计和回放功能；
+2. 禁用粘贴、撤销、反撤销、键盘选中等事件，避免干扰输入。
 
-关于第一点，先引入 **`CompositionEvent`**和 `beforeinput` 的概念
+在展开第一点前，先简单介绍一下 `CompositionEvent` 和 `beforeinput`。
 
-### **CompositionEvent** 和 **beforeinput**
+### CompositionEvent 与 beforeinput
 
 > DOM 接口  **`CompositionEvent`**  表示用户间接输入文本（如使用输入法）时发生的事件。此接口的常用事件有 `compositionstart`, `compositionupdate` 和  `compositionend`
 
-这是 MDN 的解释，简单来说，比如搜狗输入法这种 **IME** ，可以将键盘上的字母转换成中文，当我们在使用这类 IME 时，浏览器提供了 [CompositionEvent](https://developer.mozilla.org/zh-CN/docs/Web/API/CompositionEvent) 相关事件，
+简单来说，搜狗这类 IME（输入法编辑器）会把键盘上的字母组合成中文。在使用 IME 输入时，浏览器会触发一组 [CompositionEvent](https://developer.mozilla.org/zh-CN/docs/Web/API/CompositionEvent) 事件：
 
-- 当我们开始输入组合字符，会触发 `compositionstart` ，
-- 在输入过程中会持续触发 `compositionupdate` ，
-- 当完成时，比如按下空格或者回车等，则会触发 `compositionend` 。
+- 开始输入组合字符时，触发 `compositionstart`；
+- 输入过程中持续触发 `compositionupdate`；
+- 输入完成（比如按下空格或回车）时，触发 `compositionend`。
 
 > DOM 事件 **`beforeinput`**  在`[<input>]`, `<select>`  或  `<textarea>` 的值即将被修改前触发。这个事件也可以在  `contenteditable`  被设置为 `true` 的元素和打开  `designMode`  后的任何元素上被触发。
 
-这是 MDN 对 `beforeinput` 的解释，就是说当输入一个字符，当被渲染到浏览器之前会触发这个事件，这个事件常作为现代富文本编辑器的核心事件，如 [slate](https://github.com/ianstormtaylor/slate) 等。
+也就是说，输入字符在被实际渲染到浏览器之前会触发 `beforeinput`。这个事件常被用作现代富文本编辑器（如 [slate](https://github.com/ianstormtaylor/slate)）的核心事件。
 
-### 监听输入事件用于记录内容用于错误统计和回放功能
+### 记录输入用于错误统计和回放
 
-这个功能在下一篇文章中将会提到，这里先简要说一下相关逻辑：
+这个功能在下一篇文章中会详细展开，这里先简要说一下相关逻辑。
 
-这里的逻辑中除了需要记录中英文，还需要记录在 **composition** 状态下的英文。用到的事件是 `input` `beforeinput` `compositionstart` `compositionupdate` `compositionend` ，英文输入相关是通过 `input` 进行记录，中文输入会在 `compositionend` 中记录，然后通过 `CompositionEvent` 结合 `beforeinput` 可以记录下在 composition 状态下的英文了。
+除了中英文本身，我们还需要记录 composition 状态下的英文。用到的事件包括 `input`、`beforeinput`、`compositionstart`、`compositionupdate`、`compositionend`：英文输入通过 `input` 记录，中文输入在 `compositionend` 中记录，而 composition 状态下的英文则通过 `CompositionEvent` 结合 `beforeinput` 来记录。
 
 ```tsx
 function beforeInputEvent(e: any) {
@@ -166,7 +166,7 @@ function beforeInputEvent(e: any) {
 }
 ```
 
-另外在输入过程中还定义了两个列表，用于做一些特殊字符过滤处理。
+此外，还定义了两个列表，用于在输入过程中做一些特殊字符过滤：
 
 ```tsx
 const whiteList = ['”', '》', '}', '）', '】', '’']; // 白名单，这些字符不会被标记为错误
@@ -177,7 +177,7 @@ const compositionList = ['“”', '《》', '{}', '（）', '【】', '‘’']
 
 ### 禁用部分输入和键盘事件，避免干扰
 
-上面说到的第二点，在输入期间，为确保输入过程不被其他情况干扰，这里会将比如粘贴事件、选择事件等都禁用。
+回到前面提到的第二点：为了确保输入过程不被其他操作干扰，这里禁用了粘贴、选择等事件。
 
 ```tsx
 function pasteEvent(e: ClipboardEvent) {
@@ -213,13 +213,13 @@ function keyDownEvent(e: KeyboardEvent) {
 }
 ```
 
-同时通过禁用 mouse 相关事件，将鼠标选择事件也禁用掉。
+同时通过禁用 mouse 相关事件，把鼠标选择也屏蔽掉：
 
 ```html
 @mousedown.prevent @mouseup.prevent
 ```
 
-不过这会导致如果输入框失焦，那么也将无法通过鼠标点击来 focus。因此，这里在 mousedown 上还需要加上一个逻辑
+不过这样会带来一个副作用：输入框失焦后，无法再通过鼠标点击重新 focus。因此还需要在 `mousedown` 中手动补一段聚焦逻辑：
 
 ```tsx
 function focusInput() {
@@ -249,11 +249,11 @@ function moveCaretToEnd(element: HTMLElement) {
 }
 ```
 
-用于点击输入框时，光标直接在末尾呈现。
+这样点击输入框时，光标会直接定位到末尾。
 
 ## 文案与输入内容绑定
 
-上面所说的用于渲染文案的数据结构是这样的
+前面用于渲染文案的数据结构如下：
 
 ```tsx
 type SentenceArrItem = {
@@ -270,7 +270,7 @@ const state = reactive({
 });
 ```
 
-相关 `input` `beforeinput` `composition` 事件触发时会改变 `state.inputText` 的内容，
+`input`、`beforeinput`、`composition` 等事件触发时会改变 `state.inputText` 的内容：
 
 ```tsx
 watch(
@@ -298,31 +298,30 @@ watch(
 );
 ```
 
-然后 `watch state.inputText`，在其中对 `state.quoteArr` 进行改变，最终触发文案渲染的改变。
+然后通过 `watch` 监听 `state.inputText`，在回调中改变 `state.quoteArr`，最终触发文案渲染的更新。
 
-## 限时模式、计时模式、自定义模式下的特定逻辑和输入组件的绑定逻辑
+## 三种模式的特定逻辑与组件绑定
 
-在完成以上功能之后，组件会在不同阶段 emit 出一些事件，用于业务逻辑的处理
+在完成以上功能后，组件会在不同阶段 emit 出一些事件，供外层业务逻辑使用：
 
 ```tsx
 const emit = defineEmits(['is-typing', 'keydown-event', 'is-finished']);
 ```
 
-这里的业务逻辑需要注意在页面切换的时候及时销毁定时器等，避免内存泄漏。
+业务逻辑里需要注意：在页面切换时要及时销毁定时器，避免内存泄漏。
 
-这三个模式中都有刷新文案的功能，逻辑是只用保证刷新时下一次结果不是当前的文案即可。
-不过其中计时模式下的短句类型的刷新逻辑不一样，短句每次刷新是从数组中随机取其中五条，为此，我这里使用了 `Fisher-Yates 洗牌算法`
+三种模式都有刷新文案的功能，逻辑很简单——只要保证刷新后的结果与当前文案不同即可。不过计时模式下的短句类型有些不同，它每次刷新需要从数组中随机抽五条出来，这里我用了 **Fisher-Yates 洗牌算法**。
 
 ### Fisher-Yates 洗牌算法
 
 该算法的核心思想是：
 
-- 从数组（或列表）的最后一个元素开始，向前遍历整个数组。
-- 对于数组中的每一个元素（从最后一个元素开始直到第一个元素），生成一个介于当前索引（含）与数组末尾之间的随机索引。
-- 用随机索引指向的元素与当前元素交换位置。
-- 继续这个过程直到遍历到数组的第一个元素为止。
+- 从数组的最后一个元素开始，向前遍历；
+- 对每一个元素，在当前索引（含）与数组末尾之间生成一个随机索引；
+- 把当前元素和随机索引指向的元素交换位置；
+- 重复直到遍历到第一个元素为止。
 
-对应的具体实现为
+对应的具体实现如下：
 
 ```tsx
 function getRandom() {
@@ -349,13 +348,13 @@ function getRandom() {
 
 ### 上传文档
 
-自定义模式下**上传文档**可以细说一下。需要注意的是，前端自身是**不具备**直接解析或展示 .doc 等格式文档的能力的，目前只有 `.txt` 这种纯文本格式的内容可以读出来。所以借助 input file
+自定义模式下的**上传文档**也值得单独说一下。需要注意：前端本身**不具备**解析或展示 `.doc` 等富文本格式的能力，目前只能读取 `.txt` 这种纯文本格式的内容。所以这里借助 `input[type=file]`：
 
 ```html
 <input ref="uploadFile" type="file" accept=".txt" @change="handleFileChange" />
 ```
 
-来读取 `.txt`
+配合 `FileReader` 来读取 `.txt`：
 
 ```tsx
 function handleFileChange(event: any) {
@@ -381,11 +380,11 @@ function handleFileChange(event: any) {
 
 ## 其他个性化功能逻辑
 
-### 标点符号和空格的相互转换功能
+### 标点符号与空格的相互转换
 
-现在很多人的键盘输入场景都是在聊天框，一般会用空格来替代标点符号。所以这三种模式下都提供了标点符号和空格的相互转换功能，从而适合更多中国宝宝的打字习惯。
+现在很多人主要的键盘输入场景是聊天框，习惯用空格代替标点符号。因此三种模式下都提供了标点和空格的互转功能，更贴合中文用户的输入习惯。
 
-利用正则，将文案相互转换：
+借助正则就能完成转换：
 
 ```tsx
 function replacePunctuationWithSpace(input: string): string {
@@ -396,17 +395,17 @@ function replacePunctuationWithSpace(input: string): string {
 
 ## 异常情况处理
 
-在运行过程中出现过排行榜被人刷屏以及刷数据的情况，对此，我做了以下处理：
+项目上线后，排行榜出现过被刷屏和刷数据的情况，针对这些异常我做了如下处理。
 
-### 刷数据情况处理
+### 刷数据
 
-遇到过排行榜被很多无效用户 id 刷屏的情况，为此，我在保存排行榜数据的接口中增加了中间件，来校验用户名和用户 id 是否一致从而验证用户准确性
+排行榜曾被大量无效用户 ID 刷屏。为此，我在保存排行榜数据的接口前加了一层中间件，校验用户名和用户 ID 是否一致，以此验证用户身份的真实性。
 
-另外，还遇到过很多离谱数据的情况，这里我暂时只能将数据限制到合理范围内，超出范围的将会报错。
+此外还遇到过明显离谱的数据，这里暂时只能把数据限制在一个合理范围内，超出范围则会直接报错。
 
-### 刷屏情况
+### 刷屏
 
-这里我使用了 `koa2-ratelimit` 组件
+这里使用了 `koa2-ratelimit`，根据 IP 地址限制提交频次：
 ```js
 const RateLimit = require('koa2-ratelimit').RateLimit;
 
@@ -417,4 +416,3 @@ const postSave = RateLimit.middleware({
   prefixKey: 'xxxx'
 });
 ```
-根据 IP 地址限制提交频次。

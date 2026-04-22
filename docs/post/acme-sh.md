@@ -15,13 +15,15 @@ sticky: true
 excerpt: ''
 ---
 
-# DNSPod 配置 acme.sh 步骤
+# 用 acme.sh 在 DNSPod 上自动签发 SSL/TLS 证书
 
 ## DNSPod 和 acme.sh
 
-[acme.sh](acme.sh) 是一个轻量级的 ACME 协议客户端，用于通过自动化方式申请和管理 SSL/TLS 证书，比如来自 Let’s Encrypt 的免费证书。它支持各种环境，适合自动化申请和续期证书。
+[acme.sh](acme.sh) 是一个轻量级的 ACME 协议客户端，用于自动化申请和管理 SSL/TLS 证书，例如来自 Let's Encrypt 的免费证书。它兼容多种运行环境，很适合用来自动化签发与续期。
 
-[DNSPod](https://www.dnspod.cn/) 是一家提供 DNS 解析服务的公司，提供一系列域名解析解决方案，以确保域名解析的可靠性和快速性，目前已是腾讯云的一部分。我目前的域名解析使用的是这个，所以下面介绍一下使用 acme.sh 与 DNSPod 配置自动化的 SSL/TLS 证书颁发的步骤。
+[DNSPod](https://www.dnspod.cn/) 是一家提供 DNS 解析服务的公司，目前已是腾讯云的一部分。它提供一系列域名解析方案，以保证解析的稳定与速度。
+
+我目前的域名解析就在 DNSPod 上，下面记录一下用 acme.sh 配合 DNSPod 自动签发 SSL/TLS 证书的步骤。
 
 ## 步骤
 

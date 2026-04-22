@@ -10,12 +10,12 @@ excerpt: 正则的 test 方法是和 exec 类似的机制 会在当正则设置�
 # 正则 test 和 exec 在 global 模式下的工作机制
 
 ::: tip
-正则的 `test` 方法是和 `exec` 类似的机制 会在当正则设置了 global 标志位的情况下每次执行 `test` 方法的时候都会记录匹配之后的位置 在下一次执行的时候从新的位置开始匹配
+当正则设置了 `g`（global）标志位时，`test` 和 `exec` 的工作机制是类似的：每次执行后都会记录匹配结束的位置，下一次执行会从新的位置继续匹配。
 :::
 
-有一个字符串 `axbaybazbaaa`
+## exec 的匹配过程
 
-当需要匹配出所有满足 a.b 的字符时，可以定义一个如下的正则表达式
+假设有一个字符串 `axbaybazbaaa`，需要匹配出所有满足 `a.b` 的子串，可以定义如下正则表达式：
 
 ```javascript
 var reg = new RegExp('a.b', 'g');
@@ -30,7 +30,7 @@ while((arr = reg.exec(str)) !== null) { console.log(arr) }
 -> ["azb", index: 6, input: "axbaybazbaaa", groups: undefined]
 ```
 
-一个正则对象包括多个属性，此时我们需要观察的是其中的 `lastIndex` 属性，此属性的作用是记录下一次匹配开始的位置，所以我们可以将上述的 `while` 方法拆分开了查看每步执行了什么
+一个正则对象包含多个属性，这里我们需要关注的是 `lastIndex`，它记录了下一次匹配开始的位置。把上面的 `while` 循环拆开来看，可以更清楚每一步发生了什么：
 
 ```javascript
 reg.lastIndex
@@ -50,10 +50,14 @@ reg.lastIndex
 reg.exec(str)
 -> null // 此时 从第 9 个值开始执行，会发现匹配不到值，所以是 null
 reg.lastIndex
--> 0 // 以上执行到 null 时，表示一个循环结束了
+-> 0 // 执行结果为 null 时，表示一轮遍历结束，lastIndex 被重置为 0
 ```
 
-以上便是我们常用的 `exec` 的方法详解，`test` 方法本质也和 exec 相似，所以当我们在重复执行 `reg.test(str)` 时，也会和上述相同的遍历过程，之所以我们平时不会注意到 `test` 的这个机制，是因为 我们在使用 `test` 的时候，目的就是检测字符串中是否有满足我们正则表达式的字符，只要有一个满足，就不需要继续检测了。
+## test 方法同样会推进 lastIndex
+
+以上便是 `exec` 方法的工作过程。`test` 本质上和 `exec` 是相似的，所以重复执行 `reg.test(str)` 时，也会经历和上面一样的遍历过程。
+
+我们平时之所以不容易注意到 `test` 的这个机制，是因为使用 `test` 时通常只是想判断字符串是否匹配正则，只要有一个匹配项就够了，不会反复调用。
 
 ```javascript
 reg.lastIndex

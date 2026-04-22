@@ -6,28 +6,31 @@ tag:
 excerpt: ''
 ---
 
-# callback hell
+# 几种摆脱 callback hell 的方式
 
-> JavaScript 是单线程的语言，处理异步的事件比如 ajax 请求，我们会使用 callback 的方式来处理。可是当我们需要处理复杂的异步过程时，最常见的方式就是在回调事件中层层嵌套，可是这样做的弊端也很明显，就是代码不直观，冗余，当我们在后期维护的时候，工程量也会很大。
+JavaScript 是单线程语言，处理异步事件（比如 ajax 请求）时，我们通常会用 callback 的方式。但当异步流程变复杂之后，最常见的写法就是在回调里层层嵌套——代码不直观、冗余度高，后期维护成本也很大。这就是常说的 callback hell。
 
-> 于是，在 ES6 中，增加了几种新的方法，来使我们能更加优雅的处理复杂异步事件。
+ES6 引入了几种新的写法，让我们可以更优雅地处理复杂异步事件。
 
-1. Promise  
-   这也是我们在解决这类问题中用的最多的方式了，不做赘述，详情参考 http://es6.ruanyifeng.com/#docs/promise 。
+1. Promise
 
-2. Generator 函数  
-   这个可能使用率比较小，但是个人认为是个更加直观的解决方式。生成器函数一般而言可以配合 yield 来用，使用方法：
+   这是目前解决这类问题中用得最多的方式，不再赘述，详情参考 http://es6.ruanyifeng.com/#docs/promise 。
 
-```javascript
-function* countAppleSales() {
-  var result1 = yield $.get('data1.json');
-  var result2 = yield $.get('data2.json');
-}
-```
+2. Generator 函数
 
-使用 \* 来区分他跟一般的函数的区别，yield 是一个用来暂停生成器函数的关键字，使用 .next() 来继续函数详情可参见 https://www.w3ctech.com/topic/1917
+   这个使用率相对小一些，但个人认为是种更直观的解决方式。生成器函数一般会配合 yield 来用：
 
-3. acync 函数  
+   ```javascript
+   function* countAppleSales() {
+     var result1 = yield $.get('data1.json');
+     var result2 = yield $.get('data2.json');
+   }
+   ```
+
+   用 `*` 来与普通函数区分，`yield` 是用来暂停生成器函数的关键字，再通过 `.next()` 继续执行。详情可参见 https://www.w3ctech.com/topic/1917 。
+
+3. async 函数
+
    <http://es6.ruanyifeng.com/#docs/async>
 
 <https://www.w3ctech.com/topic/1917>

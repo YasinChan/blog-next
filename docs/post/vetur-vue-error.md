@@ -6,14 +6,18 @@ tag:
 excerpt: ''
 ---
 
-# vue3 在 vscode 中引用报错的问题
+# Vue 3 在 VSCode 中引用组件报错
 
 ::: tip
-Cannot find module '@/components/ui/Button.vue' or its corresponding type declarations.Vetur(2307)
+Cannot find module '@/components/ui/Button.vue' or its corresponding type declarations. Vetur(2307)
 :::
 
-## 简述
+## 现象
 
-vite 启动的 vue3 项目，在引用组件时可能会报如下错误
+在 Vite 启动的 Vue 3 项目中，引用组件时 VSCode 可能会抛出如下错误：
+
 ![](https://tf.yasinchan.com/JIg54yX6OTUzHPIWxW64m8OUo6llWDWF/55D44D1F-95CA-4483-A575-AC74368D2ED1.png)
-[官网](https://cn.vuejs.org/guide/typescript/overview.html#ide-support)给出了解决方案：将 vetur 卸载。
+
+## 解决
+
+报错来自 Vetur 这个 Vue 2 时代的扩展，对 Vue 3 + TypeScript 的类型解析已不再适用。[Vue 官方文档](https://cn.vuejs.org/guide/typescript/overview.html#ide-support) 推荐的方案很直接：**卸载 Vetur**，改用官方的 Volar（现已升级为 Vue - Official）。
