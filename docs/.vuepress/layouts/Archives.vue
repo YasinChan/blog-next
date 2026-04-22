@@ -84,7 +84,7 @@ const totalCount = computed(() =>
 
 <style lang="scss">
 .archives-page {
-  padding-top: 40px;
+  padding-top: calc(var(--navbar-height, 3.6rem) + 2.5rem);
   padding-bottom: 4rem;
 }
 

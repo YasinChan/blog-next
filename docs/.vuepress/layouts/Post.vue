@@ -30,7 +30,7 @@ const count = computed(() => articles.value?.items?.length ?? 0)
 
 <style lang="scss">
 .post-page {
-  padding-top: 40px;
+  padding-top: calc(var(--navbar-height, 3.6rem) + 2.5rem);
 }
 
 .post-header {

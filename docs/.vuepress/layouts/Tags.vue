@@ -46,7 +46,7 @@ const tagCount = computed(() => Object.keys(tagMap.value?.map ?? {}).length)
 
 <style lang="scss">
 .tags-page {
-  padding-top: 40px;
+  padding-top: calc(var(--navbar-height, 3.6rem) + 2.5rem);
 }
 
 .tags-header {
