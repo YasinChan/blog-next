@@ -1,9 +1,13 @@
 import { blogPlugin } from '@vuepress/plugin-blog';
+import { seoPlugin } from '@vuepress/plugin-seo';
+import { sitemapPlugin } from '@vuepress/plugin-sitemap';
 import { defaultTheme } from '@vuepress/theme-default';
 import { defineUserConfig } from 'vuepress';
 import { viteBundler } from '@vuepress/bundler-vite';
 import { searchProPlugin } from 'vuepress-plugin-search-pro';
 
+const SITE_HOSTNAME = 'https://yasinchan.com';
+const SITE_AUTHOR = 'YasinChan';
 const LOGO_URL =
   'https://file.yasinchan.com/rPAaaJxvP0KoTDILIYwSfGxWjUT51d8X/D018B6FFE06A79F3EE14730D88214BEE.png';
 const BAIDU_ANALYTICS_ID = '7a4553a66f119e8706760cec79cafbbf';
@@ -90,6 +94,15 @@ export default defineUserConfig({
   plugins: [
     searchProPlugin({
       // your options
+    }),
+    seoPlugin({
+      hostname: SITE_HOSTNAME,
+      author: SITE_AUTHOR,
+      autoDescription: true,
+      fallBackImage: LOGO_URL,
+    }),
+    sitemapPlugin({
+      hostname: SITE_HOSTNAME,
     }),
     blogPlugin({
       // Only files under posts are articles
