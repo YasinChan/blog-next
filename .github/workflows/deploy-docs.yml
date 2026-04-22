@@ -21,16 +21,18 @@ jobs:
           # submodules: true
 
       - name: 安装 pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          run_install: true
-          version: 7
+          version: 9
 
       - name: 设置 Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
 
       - name: 构建文档
         env:
