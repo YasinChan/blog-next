@@ -1,0 +1,445 @@
+// ===== Navbar polish =====
+
+.vp-navbar {
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: 1px solid rgba(127, 127, 127, 0.08) !important;
+  transition:
+    background 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+html[data-theme='dark'] .vp-navbar {
+  background: rgba(10, 10, 12, 0.55) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+// Site title — always gradient
+.vp-site-name {
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+  background: linear-gradient(120deg, #6ee7ff 0%, #a78bfa 50%, #f472b6 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: site-name-shine 6s ease-in-out infinite;
+}
+
+@keyframes site-name-shine {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+// Nav items — gradient underline on hover
+.vp-navbar-item {
+  position: relative;
+
+  > a,
+  > .route-link {
+    position: relative;
+    border-bottom: none !important;
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: -6px;
+      transform: translateX(-50%) scaleX(0);
+      transform-origin: center;
+      width: 80%;
+      height: 2px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #6ee7ff, #a78bfa, #f472b6);
+      opacity: 0;
+      transition:
+        transform 0.3s ease,
+        opacity 0.3s ease;
+    }
+
+    &:hover::after {
+      transform: translateX(-50%) scaleX(1);
+      opacity: 1;
+    }
+  }
+
+  // Active route — keep underline visible
+  > .route-link-active {
+    color: var(--vp-c-text, #1f2937) !important;
+    font-weight: 600;
+
+    &::after {
+      transform: translateX(-50%) scaleX(1);
+      opacity: 1;
+    }
+  }
+}
+
+// Dropdowns — same hover treatment for parent
+.vp-navbar-dropdown-wrapper > .vp-navbar-dropdown-title,
+.vp-navbar-dropdown-wrapper > button {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -6px;
+    transform: translateX(-50%) scaleX(0);
+    transform-origin: center;
+    width: 60%;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #6ee7ff, #a78bfa, #f472b6);
+    opacity: 0;
+    transition:
+      transform 0.3s ease,
+      opacity 0.3s ease;
+  }
+
+  &:hover::after {
+    transform: translateX(-50%) scaleX(1);
+    opacity: 1;
+  }
+}
+
+// Search button — pill shape
+.search-pro-button {
+  border-radius: 999px !important;
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease;
+
+  &:hover {
+    border-color: rgba(167, 139, 250, 0.5) !important;
+  }
+}
+
+// Color mode toggle — subtle rotate on hover
+.vp-toggle-color-mode-button,
+.vp-toggle-sidebar-button {
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: rotate(15deg);
+  }
+}
+
+// ===== Sidebar — minimal typography rail =====
+
+.vp-sidebar {
+  background: transparent !important;
+  border-right: none !important;
+  width: 16rem !important;
+}
+
+// Hide the duplicated site nav links inside sidebar
+.vp-sidebar > .vp-navbar-items {
+  display: none;
+}
+
+.vp-sidebar-items {
+  position: relative;
+  padding: 2rem 1.5rem !important;
+
+  // Vertical reading-rail line — sits inside item's left padding area
+  &::before {
+    content: '';
+    position: absolute;
+    top: 2rem;
+    bottom: 2rem;
+    left: calc(1.5rem + 0.4rem);
+    width: 1px;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      rgba(127, 127, 127, 0.18) 12%,
+      rgba(127, 127, 127, 0.18) 88%,
+      transparent
+    );
+  }
+}
+
+.vp-sidebar-item {
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0.45rem 0 0.45rem 1.4rem !important;
+  border: none !important;
+  border-radius: 0;
+  font-size: 0.83rem;
+  line-height: 1.5;
+  color: var(--vp-c-text-mute, #9ca3af) !important;
+  transition: color 0.2s ease;
+
+  // Dot — fully inside item's left padding, centered on rail (left: 0.4rem)
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0.4rem;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #a78bfa;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    color: var(--vp-c-text, #111) !important;
+
+    &::before {
+      transform: translate(-50%, -50%) scale(0.5);
+    }
+  }
+}
+
+// Top heading — eyebrow style above the list
+.vp-sidebar-heading {
+  margin-bottom: 1rem !important;
+  padding-left: 0 !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.25em !important;
+  text-transform: uppercase;
+  color: var(--vp-c-text-mute, #9ca3af) !important;
+
+  &::before {
+    display: none;
+  }
+}
+
+// Active sub-item only — heading never gets active highlight
+.vp-sidebar-item:not(.vp-sidebar-heading).active,
+.vp-sidebar-item:not(.vp-sidebar-heading).route-link-active,
+.vp-sidebar-item:not(.vp-sidebar-heading)[active] {
+  color: #a78bfa !important;
+  font-weight: 600 !important;
+  background: transparent !important;
+
+  &::before {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.15);
+  }
+}
+
+html[data-theme='dark'] .vp-sidebar-item:not(.vp-sidebar-heading).active,
+html[data-theme='dark'] .vp-sidebar-item:not(.vp-sidebar-heading).route-link-active,
+html[data-theme='dark'] .vp-sidebar-item:not(.vp-sidebar-heading)[active] {
+  color: #c4b5fd !important;
+
+  &::before {
+    background: #c4b5fd;
+    box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.18);
+  }
+}
+
+// Heading stays the same regardless of active state — keep eyebrow look clean
+.vp-sidebar-heading.active,
+.vp-sidebar-heading.route-link-active,
+.vp-sidebar-heading[active] {
+  color: var(--vp-c-text-mute, #9ca3af) !important;
+  font-weight: 700 !important;
+}
+
+@media (max-width: 959px) {
+  // Mobile drawer — restore default look
+  .vp-sidebar {
+    background: var(--vp-c-bg, #fff) !important;
+    border-right: 1px solid rgba(127, 127, 127, 0.12) !important;
+  }
+
+  .vp-sidebar > .vp-navbar-items {
+    display: block;
+  }
+}
+
+.vp-sidebar-mask {
+  backdrop-filter: blur(2px);
+}
+
+// ===== Markdown content polish (post detail + about pages) =====
+
+.vp-page #content {
+  // First-level title — gradient + halo
+  > h1:first-child,
+  > h1:first-of-type {
+    position: relative;
+    margin-top: 0.5rem;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1rem;
+    font-size: clamp(1.9rem, 4.2vw, 2.7rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    border-bottom: 1px dashed rgba(127, 127, 127, 0.2);
+
+    background: linear-gradient(120deg, #6ee7ff 0%, #a78bfa 50%, #f472b6 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: content-h1-shine 8s ease-in-out infinite;
+
+    .header-anchor {
+      -webkit-text-fill-color: rgba(167, 139, 250, 0.5);
+    }
+  }
+
+  // h2 — vertical gradient bar accent
+  h2 {
+    position: relative;
+    padding-left: 0.85rem;
+    padding-top: 0 !important;
+    margin-top: 2.5rem;
+    border-top: none !important;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 1.1em;
+      border-radius: 2px;
+      background: linear-gradient(to bottom, #6ee7ff, #a78bfa, #f472b6);
+    }
+  }
+
+  // h3 — colored hash prefix
+  h3 {
+    &::before {
+      content: '#';
+      margin-right: 0.4rem;
+      color: rgba(167, 139, 250, 0.7);
+      font-weight: 800;
+    }
+  }
+
+  // Blockquotes — soft tinted bg + colored bar
+  blockquote {
+    position: relative;
+    margin: 1.2rem 0;
+    padding: 0.85rem 1.1rem 0.85rem 1.4rem;
+    border-left: 4px solid #a78bfa !important;
+    border-radius: 0 8px 8px 0;
+    background: rgba(167, 139, 250, 0.06);
+    color: var(--vp-c-text, inherit);
+
+    > p:first-child {
+      margin-top: 0;
+    }
+    > p:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // Inline code — chip-like
+  :not(pre) > code {
+    padding: 0.15em 0.45em;
+    border-radius: 6px;
+    font-size: 0.85em;
+    background: rgba(167, 139, 250, 0.1);
+    color: #a78bfa;
+    border: 1px solid rgba(167, 139, 250, 0.18);
+  }
+
+  html[data-theme='dark'] & :not(pre) > code {
+    color: #c4b5fd;
+  }
+
+  // Code blocks — softer rounding
+  div[class*='language-'] {
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  // Links — animated underline
+  a:not(.header-anchor) {
+    position: relative;
+    color: #a78bfa;
+    text-decoration: none;
+    background-image: linear-gradient(90deg, #a78bfa, #f472b6);
+    background-size: 0% 1.5px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition:
+      background-size 0.3s ease,
+      color 0.25s ease;
+
+    &:hover {
+      background-size: 100% 1.5px;
+      color: #f472b6;
+    }
+  }
+
+  // Lists — tighter spacing
+  ul li,
+  ol li {
+    margin: 0.25rem 0;
+  }
+
+  // Horizontal rule — gradient
+  hr {
+    height: 2px;
+    border: none;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(167, 139, 250, 0.4),
+      transparent
+    );
+    margin: 2rem 0;
+  }
+
+  // Images — soft shadow + rounding
+  img {
+    border-radius: 10px;
+    box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.25);
+  }
+
+  // Tables — cleaner
+  table {
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+
+    th {
+      background: rgba(167, 139, 250, 0.08);
+      font-weight: 600;
+    }
+
+    td,
+    th {
+      border-color: rgba(127, 127, 127, 0.18) !important;
+    }
+  }
+}
+
+@keyframes content-h1-shine {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vp-page #content > h1:first-child,
+  .vp-page #content > h1:first-of-type {
+    animation: none;
+  }
+}

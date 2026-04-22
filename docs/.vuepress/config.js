@@ -4,41 +4,41 @@ import { defineUserConfig } from 'vuepress';
 import { viteBundler } from '@vuepress/bundler-vite';
 import { searchProPlugin } from 'vuepress-plugin-search-pro';
 
+const LOGO_URL =
+  'https://file.yasinchan.com/rPAaaJxvP0KoTDILIYwSfGxWjUT51d8X/D018B6FFE06A79F3EE14730D88214BEE.png';
+const BAIDU_ANALYTICS_ID = '7a4553a66f119e8706760cec79cafbbf';
+const GA_MEASUREMENT_ID = 'G-8C7G0NW5CR';
+
 export default defineUserConfig({
   lang: 'zh-CN',
 
   title: 'Yasinchan的自留地',
   description: 'Yasinchan 记录前端生活',
   head: [
-    [
-      'link',
-      {
-        rel: 'icon',
-        href: 'https://file.yasinchan.com/rPAaaJxvP0KoTDILIYwSfGxWjUT51d8X/D018B6FFE06A79F3EE14730D88214BEE.png',
-      },
-    ],
+    ['link', { rel: 'icon', href: LOGO_URL }],
+    ['link', { rel: 'preconnect', href: 'https://file.yasinchan.com' }],
     ['script', { src: '/iconfont.js' }],
     [
       'script',
       {},
-      'var _hmt = _hmt || [];\n(function() {\n  var hm = document.createElement("script");\n  hm.src = "https://hm.baidu.com/hm.js?7a4553a66f119e8706760cec79cafbbf";\n  var s = document.getElementsByTagName("script")[0]; \n  s.parentNode.insertBefore(hm, s);\n})();',
+      `var _hmt = _hmt || [];\n(function() {\n  var hm = document.createElement("script");\n  hm.src = "https://hm.baidu.com/hm.js?${BAIDU_ANALYTICS_ID}";\n  var s = document.getElementsByTagName("script")[0]; \n  s.parentNode.insertBefore(hm, s);\n})();`,
     ],
     [
       'script',
       {
         async: true,
-        src: 'https://www.googletagmanager.com/gtag/js?id=G-8C7G0NW5CR',
+        src: `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`,
       },
     ],
     [
       'script',
       {},
-      " window.dataLayer = window.dataLayer || [];\n  function gtag(){dataLayer.push(arguments);}\n  gtag('js', new Date());\n\n  gtag('config', 'G-8C7G0NW5CR');",
+      `window.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag('js', new Date());\ngtag('config', '${GA_MEASUREMENT_ID}');`,
     ],
   ],
 
   theme: defaultTheme({
-    logo: 'https://file.yasinchan.com/rPAaaJxvP0KoTDILIYwSfGxWjUT51d8X/D018B6FFE06A79F3EE14730D88214BEE.png',
+    logo: LOGO_URL,
 
     navbar: [
       {
@@ -118,20 +118,6 @@ export default defineUserConfig({
 
       category: [
         {
-          key: 'category',
-          getter: (page) => page.frontmatter.category || [],
-          layout: 'Category',
-          itemLayout: 'Category',
-          frontmatter: () => ({
-            title: 'Categories',
-            sidebar: false,
-          }),
-          itemFrontmatter: (name) => ({
-            title: `Category ${name}`,
-            sidebar: false,
-          }),
-        },
-        {
           key: 'tags',
           getter: (page) => page.frontmatter.tag || [],
           layout: 'Tags',
@@ -157,24 +143,9 @@ export default defineUserConfig({
             title: 'Posts',
             sidebar: false,
           }),
-          // Sort pages with time and sticky
-          sorter: (pageA, pageB) => {
-            // if (pageA.frontmatter.sticky && pageB.frontmatter.sticky)
-            //   return pageB.frontmatter.sticky - pageA.frontmatter.sticky;
-
-            // if (pageA.frontmatter.sticky && !pageB.frontmatter.sticky)
-            //   return -1;
-
-            // if (!pageA.frontmatter.sticky && pageB.frontmatter.sticky) return 1;
-
-            // if (!pageB.frontmatter.date) return 1;
-            // if (!pageA.frontmatter.date) return -1;
-
-            return (
-              new Date(pageB.frontmatter.date).getTime() -
-              new Date(pageA.frontmatter.date).getTime()
-            );
-          },
+          sorter: (pageA, pageB) =>
+            new Date(pageB.frontmatter.date).getTime() -
+            new Date(pageA.frontmatter.date).getTime(),
         },
         {
           key: 'archives',

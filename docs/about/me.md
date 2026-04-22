@@ -4,7 +4,8 @@
 - 先后就职于
   - [意派科技](https://www.epub360.com/)（2017 ～ 2018）
   - [TapTap](https://taptap.cn)（2018 ～ 2024）
-  - [领健医疗](https://www.linkedcare.cn/)（2024 ～ 至今）
+  - [领健医疗](https://www.linkedcare.cn/)（2024 ～ 2025）
+  - [心动](https://www.xd.com/) (2025 ~ 至今)
 
 ## 好玩
 
