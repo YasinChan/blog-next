@@ -50,14 +50,17 @@ const toggleTheme = () => {
 <style lang="scss">
 .shared-theme-toggle {
   position: fixed;
-  top: 1.5rem;
+  top: 1.35rem;
   right: 1.5rem;
   z-index: 7;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 2.25rem;
+  height: 2.25rem;
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
   padding: 0;
   border-radius: 50%;
   border: 1px solid rgba(127, 127, 127, 0.18);
@@ -78,6 +81,12 @@ const toggleTheme = () => {
     border-color: rgba(167, 139, 250, 0.5);
     transform: rotate(20deg);
     box-shadow: 0 8px 24px -10px rgba(167, 139, 250, 0.5);
+  }
+}
+
+@media (width <= 767px) {
+  .shared-theme-toggle {
+    top: 1rem;
   }
 }
 
