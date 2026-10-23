@@ -16,9 +16,26 @@ const GA_MEASUREMENT_ID = 'G-8C7G0NW5CR';
 export default defineUserConfig({
   lang: 'zh-CN',
 
-  title: 'Yasinchan的自留地',
-  description: 'Yasinchan 记录前端生活',
+  title: 'YasinChan · 轨道手记',
+  description: 'YasinChan · AI 应用与前端开发。记录项目、工作和一些好玩的东西。',
   head: [
+    [
+      'script',
+      {},
+      `(function () {
+  try {
+    var stored = localStorage.getItem('vuepress-color-scheme');
+    var dark = stored
+      ? stored === 'dark' ||
+        (stored === 'auto' &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches)
+      : true;
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  } catch (e) {
+    document.documentElement.dataset.theme = 'dark';
+  }
+})();`,
+    ],
     ['link', { rel: 'icon', href: LOGO_URL }],
     ['link', { rel: 'preconnect', href: 'https://file.yasinchan.com' }],
     ['script', { src: '/iconfont.js' }],
@@ -43,11 +60,16 @@ export default defineUserConfig({
 
   theme: defaultTheme({
     logo: LOGO_URL,
+    colorMode: 'dark',
 
     navbar: [
       {
         text: '首页',
         link: '/',
+      },
+      {
+        text: '探索',
+        link: '/?view=explore',
       },
       {
         text: '博客',

@@ -1,80 +1,358 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import ParentLayout from '@vuepress/theme-default/layouts/Layout.vue';
+import { useRoute, useRouter } from 'vuepress/client';
+import ExploreView from '../components/ExploreView.vue';
+import SpaceTitle from '../components/SpaceTitle.vue';
+import SharedThemeToggle from '../components/SharedThemeToggle.vue';
+
+const HOME_TITLE = 'YasinChan · 轨道手记';
+const EXPLORE_TITLE = 'Explore | YasinChan · 轨道手记';
+const TITLE_TRANSITION =
+  'transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease';
 
 const heroRef = ref(null);
-const isDark = ref(false);
+const route = useRoute();
+const router = useRouter();
+const initialExplore = route.query.view === 'explore';
+const leaving = ref(false);
+const exploreOpen = ref(false);
+const homeVisible = ref(!initialExplore);
+const exploreListView = ref(false);
+const explorePanelOpen = ref(false);
+const exploreBloom = ref(false);
+const exploreReverse = ref(false);
+const closing = ref(false);
+const titleBusy = ref(false);
+const titleClip = ref('none');
+let titleClipTimer = 0;
+const reducedMotion =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sharedTitleStyle = ref({
+  opacity: 0,
+  transform: 'translate(0, 0) scale(1)',
+  transition: 'none',
+});
+let exploreTimer = 0;
+let exploreTargetRect = null;
+
+
+const setDocumentTitle = (title) => {
+  if (typeof document !== 'undefined') document.title = title;
+};
+
+const resetTilt = () => {
+  if (!heroRef.value) return;
+  heroRef.value.style.setProperty('--tilt-x', '0deg');
+  heroRef.value.style.setProperty('--tilt-y', '0deg');
+};
 
 const onMove = (e) => {
   if (!heroRef.value) return;
   const { clientX, clientY } = e;
-  const x = (clientX / window.innerWidth - 0.5) * 30;
-  const y = (clientY / window.innerHeight - 0.5) * 30;
-  heroRef.value.style.setProperty('--mx', `${x}px`);
-  heroRef.value.style.setProperty('--my', `${y}px`);
+  const nx = clientX / window.innerWidth - 0.5;
+  const ny = clientY / window.innerHeight - 0.5;
+  heroRef.value.style.setProperty('--tilt-x', `${-ny * 3}deg`);
+  heroRef.value.style.setProperty('--tilt-y', `${nx * 3.5}deg`);
 };
 
-const applyTheme = (dark) => {
-  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  try {
-    localStorage.setItem('vuepress-color-scheme', dark ? 'dark' : 'light');
-  } catch {}
+
+const getHomeTitleRect = () => {
+  const el = heroRef.value?.querySelector('.hero__name');
+  const content = heroRef.value?.querySelector('.hero__content');
+  if (!el || !content) return null;
+
+  const prevTransition = content.style.transition;
+  content.style.transition = 'none';
+  resetTilt();
+  void content.offsetHeight;
+  const rect = el.getBoundingClientRect();
+  content.style.transition = prevTransition;
+  return rect;
 };
 
-const toggleTheme = () => {
-  isDark.value = !isDark.value;
-  applyTheme(isDark.value);
+const getExploreTitleRect = () => {
+  const el = document.querySelector(
+    '.explore-overlay .orbit-core__body strong',
+  );
+  return el?.getBoundingClientRect() ?? null;
+};
+
+const moveTitleHome = (animate) => {
+  const home = getHomeTitleRect();
+  if (!home) return;
+
+  sharedTitleStyle.value = {
+    opacity: 1,
+    transform: `translate(${home.left}px, ${home.top}px) scale(1)`,
+    clipPath: titleClip.value,
+    transition: animate ? TITLE_TRANSITION : 'none',
+  };
+};
+
+const moveTitleExplore = (animate, targetOverride = null) => {
+  const home = getHomeTitleRect();
+  const target = targetOverride || getExploreTitleRect();
+  if (!home || !target || !home.width) return;
+
+  exploreTargetRect = target;
+  const scale = target.width / home.width;
+  sharedTitleStyle.value = {
+    opacity: 1,
+    transform: `translate(${target.left}px, ${target.top}px) scale(${scale})`,
+    clipPath: titleClip.value,
+    transition: animate ? TITLE_TRANSITION : 'none',
+  };
+};
+
+const hideSharedTitle = () => {
+  sharedTitleStyle.value = {
+    ...sharedTitleStyle.value,
+    opacity: 0,
+    transition: 'opacity 0.2s ease',
+  };
+};
+
+const updateTitleClip = (delay = 0) => {
+  window.clearTimeout(titleClipTimer);
+
+  if (delay) {
+    titleClipTimer = window.setTimeout(() => updateTitleClip(0), delay);
+    return;
+  }
+
+  if (!explorePanelOpen.value) {
+    titleClip.value = 'none';
+    sharedTitleStyle.value = {
+      ...sharedTitleStyle.value,
+      clipPath: titleClip.value,
+    };
+    return;
+  }
+
+  const panel = document.querySelector('.explore-overlay .panel');
+  const title = document.querySelector('.space-title');
+
+  if (!panel || !title) {
+    titleClip.value = 'none';
+  } else {
+    const rect = title.getBoundingClientRect();
+    const panelLeft = window.innerWidth - panel.offsetWidth;
+    const visible = Math.max(
+      0,
+      Math.min(1, (panelLeft - rect.left) / Math.max(rect.width, 1)),
+    );
+    titleClip.value =
+      visible >= 1
+        ? 'none'
+        : `inset(0 ${((1 - visible) * 100).toFixed(2)}% 0 0)`;
+  }
+
+  sharedTitleStyle.value = {
+    ...sharedTitleStyle.value,
+    clipPath: titleClip.value,
+  };
+};
+
+const syncSharedTitle = (animate = false) => {
+  if (!heroRef.value) return;
+
+  if (!exploreOpen.value || closing.value) {
+    moveTitleHome(animate);
+    return;
+  }
+
+  moveTitleExplore(animate);
+};
+
+const onExploreState = (state) => {
+  exploreListView.value = state.view === 'list';
+  const wasPanelOpen = explorePanelOpen.value;
+  explorePanelOpen.value = Boolean(state.panel);
+  if (titleBusy.value || closing.value || !exploreOpen.value) return;
+  syncSharedTitle(false);
+
+  if (explorePanelOpen.value && !wasPanelOpen) {
+    nextTick(() => updateTitleClip());
+  } else if (!explorePanelOpen.value && wasPanelOpen) {
+    // Keep the clip while the panel slides out, then reveal the title fully.
+    updateTitleClip(420);
+  }
+};
+
+const openExplore = async (animate = true, updateUrl = true) => {
+  if (exploreOpen.value) return;
+
+  const isMobile = window.matchMedia('(max-width: 767px)').matches;
+  const animateDesktop = animate && !reducedMotion && !isMobile;
+
+  titleBusy.value = true;
+  closing.value = false;
+  exploreOpen.value = true;
+  homeVisible.value = true;
+  leaving.value = false;
+  exploreBloom.value = false;
+  exploreReverse.value = false;
+  exploreListView.value = isMobile;
+  explorePanelOpen.value = false;
+
+  if (updateUrl) {
+    await router.push({
+      path: '/',
+      query: { ...route.query, view: 'explore' },
+    });
+  }
+
+  await nextTick();
+
+  if (!animate || reducedMotion) {
+    homeVisible.value = false;
+    if (isMobile) {
+      hideSharedTitle();
+    } else {
+      moveTitleExplore(false);
+    }
+    setDocumentTitle(EXPLORE_TITLE);
+    titleBusy.value = false;
+    return;
+  }
+
+  if (isMobile) {
+    hideSharedTitle();
+    leaving.value = true;
+    exploreTimer = window.setTimeout(() => {
+      homeVisible.value = false;
+      setDocumentTitle(EXPLORE_TITLE);
+      titleBusy.value = false;
+    }, 360);
+    return;
+  }
+
+  const home = getHomeTitleRect();
+  const target = getExploreTitleRect();
+
+  if (!home || !target || !home.width) {
+    homeVisible.value = false;
+    moveTitleExplore(false);
+    setDocumentTitle(EXPLORE_TITLE);
+    titleBusy.value = false;
+    return;
+  }
+
+  exploreTargetRect = target;
+  moveTitleHome(false);
+  exploreBloom.value = true;
+  leaving.value = true;
+  setDocumentTitle(EXPLORE_TITLE);
+
+  window.requestAnimationFrame(() => {
+    moveTitleExplore(true, exploreTargetRect);
+  });
+
+  exploreTimer = window.setTimeout(() => {
+    homeVisible.value = false;
+    titleBusy.value = false;
+    // Keep bloom on so individual node/ring entrance animations do not restart.
+    syncSharedTitle(false);
+  }, 820);
+};
+
+const closeExplore = async (updateUrl = true) => {
+  if (!exploreOpen.value || closing.value) return;
+
+  window.clearTimeout(exploreTimer);
+  closing.value = true;
+  titleBusy.value = true;
+  exploreReverse.value = true;
+  exploreListView.value = false;
+  explorePanelOpen.value = false;
+  titleClip.value = 'none';
+  homeVisible.value = true;
+  leaving.value = true;
+
+  await nextTick();
+  moveTitleHome(true);
+  setDocumentTitle(HOME_TITLE);
+
+  if (updateUrl && route.query.view) {
+    void router.push({ path: '/', query: {} });
+  }
+
+  // Let the orbit fold for a beat before the home links and buttons return.
+  window.setTimeout(() => {
+    leaving.value = false;
+  }, 300);
+
+  window.setTimeout(() => {
+    exploreOpen.value = false;
+    exploreReverse.value = false;
+    closing.value = false;
+    titleBusy.value = false;
+    homeVisible.value = true;
+    leaving.value = false;
+    moveTitleHome(false);
+  }, 820);
+};
+
+const goExplore = (event) => {
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+
+  if (leaving.value || exploreOpen.value) return;
+  void openExplore(true, true);
+};
+
+watch(
+  () => route.query.view,
+  (view) => {
+    if (view === 'explore' && !exploreOpen.value) {
+      void openExplore(true, false);
+    } else if (view !== 'explore' && exploreOpen.value && !closing.value) {
+      closeExplore(false);
+    }
+  },
+);
+
+const onResize = () => {
+  if (titleBusy.value || closing.value) return;
+  syncSharedTitle(false);
+  if (explorePanelOpen.value) nextTick(() => updateTitleClip());
 };
 
 onMounted(() => {
+  document.documentElement.classList.add('home-lock');
   window.addEventListener('mousemove', onMove);
+  window.addEventListener('resize', onResize);
+  document.documentElement.addEventListener('mouseleave', resetTilt);
 
-  // Sync initial state with theme storage
-  const stored = (() => {
-    try {
-      return localStorage.getItem('vuepress-color-scheme');
-    } catch {
-      return null;
+  nextTick(() => {
+    if (initialExplore) {
+      void openExplore(false, false);
+    } else {
+      moveTitleHome(false);
     }
-  })();
-  if (stored === 'dark' || stored === 'light') {
-    isDark.value = stored === 'dark';
-  } else {
-    isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }
+  });
 });
+
 onUnmounted(() => {
+  document.documentElement.classList.remove('home-lock');
   window.removeEventListener('mousemove', onMove);
+  window.removeEventListener('resize', onResize);
+  document.documentElement.removeEventListener('mouseleave', resetTilt);
+  window.clearTimeout(exploreTimer);
+  window.clearTimeout(titleClipTimer);
 });
 </script>
 
 <template>
   <ParentLayout>
     <template #page>
-      <main ref="heroRef" class="hero">
-        <button
-          class="hero__theme-toggle"
-          type="button"
-          :aria-label="isDark ? '切换到日间模式' : '切换到夜间模式'"
-          @click="toggleTheme"
-        >
-          <svg v-if="!isDark" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-          </svg>
-          <svg v-else viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-        </button>
-
-        <div class="hero__bg">
-          <span class="blob blob--a" />
-          <span class="blob blob--b" />
-          <span class="blob blob--c" />
-        </div>
-
-        <div class="hero__grid" />
-
+      <main
+        ref="heroRef"
+        class="hero"
+        :class="{ 'is-leaving': leaving, 'is-hidden': !homeVisible }"
+      >
         <div class="hero__content">
           <h1 class="hero__name" data-text="YasinChan">YasinChan</h1>
 
@@ -124,7 +402,13 @@ onUnmounted(() => {
             </a>
           </div>
 
-          <a href="/post/" class="hero__enter">
+          <a
+            href="/explore/"
+            class="hero__enter"
+            @click="goExplore"
+            @pointerenter="preloadExplore"
+            @focus="preloadExplore"
+          >
             <span>EXPLORE</span>
             <svg
               viewBox="0 0 24 24"
@@ -143,11 +427,49 @@ onUnmounted(() => {
           </a>
         </div>
       </main>
+
+      <SpaceTitle :style="sharedTitleStyle" />
+      <SharedThemeToggle />
+
+      <div v-if="exploreOpen" class="explore-overlay">
+        <ExploreView
+          embedded
+          hide-title
+          :bloom="exploreBloom"
+          :reverse="exploreReverse"
+          @state="onExploreState"
+          @close="closeExplore()"
+        />
+      </div>
     </template>
   </ParentLayout>
 </template>
 
 <style lang="scss">
+html.home-lock,
+html.home-lock body {
+  overflow: hidden;
+}
+
+.explore-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.explore-overlay > .explore {
+  width: 100vw;
+  min-height: 100vh;
+  margin-left: 0;
+}
+
+/* The panel is a modal; keep the shared title out of its way. */
+html:has(.explore-overlay .explore[data-view='list']) .space-title {
+  opacity: 0 !important;
+  transition: opacity 0.2s ease;
+}
+
 .home-page {
   .vp-page,
   .page,
@@ -155,14 +477,22 @@ onUnmounted(() => {
     max-width: none !important;
     padding: 0 !important;
     margin: 0 !important;
+    background: transparent !important;
   }
 }
 
+.hero.is-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .hero {
-  --mx: 0px;
-  --my: 0px;
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
 
   position: relative;
+  z-index: 2;
+  perspective: 1400px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -170,7 +500,7 @@ onUnmounted(() => {
   margin-left: calc(-50vw + 50%);
   min-height: 100vh;
   overflow: hidden;
-  background: var(--vp-c-bg, #fff);
+  background: transparent;
 }
 
 .hero__theme-toggle {
@@ -195,7 +525,10 @@ onUnmounted(() => {
     color 0.25s ease,
     border-color 0.25s ease,
     transform 0.4s ease,
-    box-shadow 0.25s ease;
+    box-shadow 0.25s ease,
+    translate 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    rotate 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.35s ease;
 
   &:hover {
     color: #a78bfa;
@@ -216,76 +549,6 @@ html[data-theme='dark'] .hero__theme-toggle {
   }
 }
 
-.hero__bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  filter: blur(80px);
-  pointer-events: none;
-}
-
-.blob {
-  position: absolute;
-  display: block;
-  border-radius: 50%;
-  opacity: 0.55;
-  mix-blend-mode: screen;
-  transform: translate(var(--mx), var(--my));
-  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-  will-change: transform;
-}
-
-.blob--a {
-  top: -10%;
-  left: -5%;
-  width: 50vw;
-  height: 50vw;
-  background: radial-gradient(circle, #6ee7ff 0%, transparent 60%);
-  animation: float-a 14s ease-in-out infinite;
-}
-
-.blob--b {
-  top: 20%;
-  right: -10%;
-  width: 55vw;
-  height: 55vw;
-  background: radial-gradient(circle, #a78bfa 0%, transparent 60%);
-  animation: float-b 18s ease-in-out infinite;
-}
-
-.blob--c {
-  bottom: -15%;
-  left: 20%;
-  width: 60vw;
-  height: 60vw;
-  background: radial-gradient(circle, #f472b6 0%, transparent 60%);
-  animation: float-c 22s ease-in-out infinite;
-}
-
-html[data-theme='dark'] .blob {
-  opacity: 0.4;
-}
-
-.hero__grid {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background-image: linear-gradient(
-      to right,
-      rgba(127, 127, 127, 0.08) 1px,
-      transparent 1px
-    ),
-    linear-gradient(to bottom, rgba(127, 127, 127, 0.08) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
-  -webkit-mask-image: radial-gradient(
-    ellipse at center,
-    #000 30%,
-    transparent 75%
-  );
-  pointer-events: none;
-}
-
 .hero__content {
   position: relative;
   z-index: 2;
@@ -294,7 +557,40 @@ html[data-theme='dark'] .blob {
   align-items: center;
   text-align: center;
   padding: 0 1.5rem;
+  transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transform-style: preserve-3d;
+  transition:
+    transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+    translate 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    scale 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+
+.hero.is-leaving {
+  pointer-events: none;
+
+  .hero__name {
+    transform: translateZ(0);
+    translate: var(--morph-x, 0px) var(--morph-y, 0px);
+    scale: var(--morph-scale, 1);
+  }
+
+  .hero__links {
+    translate: 0 60vh;
+    opacity: 0;
+  }
+
+  .hero__enter {
+    translate: 0 70vh;
+    opacity: 0;
+  }
+
+  .hero__theme-toggle {
+    translate: 0 -10vh;
+    rotate: -90deg;
+    opacity: 0;
+  }
+}
+
 
 .hero__name {
   position: relative;
@@ -304,11 +600,13 @@ html[data-theme='dark'] .blob {
   letter-spacing: -0.04em;
   line-height: 1;
   background: linear-gradient(120deg, #6ee7ff 0%, #a78bfa 45%, #f472b6 100%);
-  background-size: 200% 200%;
+  background-size: 100% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: shine 6s ease-in-out infinite;
+  opacity: 0;
+  transform: none;
+  pointer-events: none;
 }
 
 .hero__name::after {
@@ -330,6 +628,10 @@ html[data-theme='dark'] .blob {
   justify-content: center;
   gap: 0.75rem;
   margin: 2rem 0 2.75rem;
+  transform: translateZ(18px);
+  transition:
+    translate 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.45s ease;
 }
 
 .hero__link {
@@ -381,14 +683,20 @@ html[data-theme='dark'] .blob {
   background: var(--vp-c-bg, #fff);
   border: 1px solid rgba(127, 127, 127, 0.25);
   backdrop-filter: blur(8px);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  transform: translateZ(9px);
+  transition:
+    transform 0.3s ease,
+    translate 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.45s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
 
   svg {
     transition: transform 0.3s ease;
   }
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateZ(9px) translateY(-2px);
     border-color: transparent;
     box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.5),
       0 10px 40px -10px rgba(167, 139, 250, 0.6);
@@ -399,51 +707,40 @@ html[data-theme='dark'] .blob {
   }
 }
 
-@keyframes shine {
-  0%,
-  100% {
-    background-position: 0% 50%;
+@media (max-width: 767px) {
+  .hero.is-leaving .hero__content {
+    translate: 0 -1.4rem;
+    scale: 0.98;
   }
-  50% {
-    background-position: 100% 50%;
+
+  .hero.is-leaving .hero__name {
+    transform: translateZ(32px);
+    translate: 0;
+    scale: 1;
+  }
+
+  .hero.is-leaving .hero__links,
+  .hero.is-leaving .hero__enter {
+    translate: 0;
+    scale: 1;
+  }
+
+  .hero.is-leaving .hero__theme-toggle {
+    translate: 0;
+    rotate: 0deg;
   }
 }
 
-@keyframes float-a {
-  0%,
-  100% {
-    transform: translate(var(--mx), var(--my)) scale(1);
-  }
-  50% {
-    transform: translate(calc(var(--mx) + 4vw), calc(var(--my) + 3vw))
-      scale(1.15);
-  }
-}
-
-@keyframes float-b {
-  0%,
-  100% {
-    transform: translate(var(--mx), var(--my)) scale(1.05);
-  }
-  50% {
-    transform: translate(calc(var(--mx) - 5vw), calc(var(--my) + 4vw))
-      scale(0.95);
-  }
-}
-
-@keyframes float-c {
-  0%,
-  100% {
-    transform: translate(var(--mx), var(--my)) scale(0.95);
-  }
-  50% {
-    transform: translate(calc(var(--mx) + 3vw), calc(var(--my) - 4vw))
-      scale(1.1);
+@media (prefers-reduced-motion: reduce), (hover: none) {
+  .hero__content,
+  .hero__name,
+  .hero__links,
+  .hero__enter {
+    transform: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .blob,
   .hero__name {
     animation: none;
   }

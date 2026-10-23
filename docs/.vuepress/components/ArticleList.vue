@@ -19,6 +19,27 @@ const articles = computed(() =>
     tags: Array.isArray(info.tag) ? info.tag : [],
   })),
 )
+
+const tiltCard = (event) => {
+  if (event.pointerType !== 'mouse') return
+  const card = event.currentTarget
+  const rect = card.getBoundingClientRect()
+  const x = (event.clientX - rect.left) / rect.width - 0.5
+  const y = (event.clientY - rect.top) / rect.height - 0.5
+
+  card.style.setProperty('--rx', `${(-y * 2.5).toFixed(2)}deg`)
+  card.style.setProperty('--ry', `${(x * 3).toFixed(2)}deg`)
+  card.style.setProperty('--glare-x', `${((x + 0.5) * 100).toFixed(1)}%`)
+  card.style.setProperty('--glare-y', `${((y + 0.5) * 100).toFixed(1)}%`)
+}
+
+const resetCard = (event) => {
+  const card = event.currentTarget
+  card.style.setProperty('--rx', '0deg')
+  card.style.setProperty('--ry', '0deg')
+  card.style.setProperty('--glare-x', '50%')
+  card.style.setProperty('--glare-y', '50%')
+}
 </script>
 
 <template>
@@ -30,6 +51,8 @@ const articles = computed(() =>
       :key="path"
       class="article"
       :style="{ '--i': idx }"
+      @pointermove="tiltCard"
+      @pointerleave="resetCard"
       @click="$router.push(path)"
     >
       <span class="article__accent" />
@@ -71,6 +94,10 @@ const articles = computed(() =>
 
 .article {
   --i: 0;
+  --rx: 0deg;
+  --ry: 0deg;
+  --glare-x: 50%;
+  --glare-y: 50%;
 
   position: relative;
   box-sizing: border-box;
@@ -82,8 +109,10 @@ const articles = computed(() =>
   border: 1px solid rgba(127, 127, 127, 0.12);
   cursor: pointer;
   overflow: hidden;
+  transform: perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry));
+  transform-style: preserve-3d;
   transition:
-    transform 0.3s ease,
+    transform 0.25s ease-out,
     border-color 0.3s ease,
     box-shadow 0.3s ease,
     background 0.3s ease;
@@ -112,8 +141,24 @@ const articles = computed(() =>
     pointer-events: none;
   }
 
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+      420px circle at var(--glare-x) var(--glare-y),
+      rgba(167, 139, 250, 0.16),
+      transparent 62%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
   &:hover {
-    transform: translateY(-3px);
+    transform: perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry))
+      translateY(-3px);
     border-color: transparent;
     box-shadow: 0 14px 40px -18px rgba(167, 139, 250, 0.45);
 
@@ -133,6 +178,10 @@ const articles = computed(() =>
     .article__arrow {
       opacity: 1;
       transform: translateX(0);
+    }
+
+    &::after {
+      opacity: 1;
     }
   }
 }
@@ -266,14 +315,25 @@ const articles = computed(() =>
   border-color: rgba(167, 139, 250, 0.3);
 }
 
+@media (prefers-reduced-motion: reduce), (hover: none) {
+  .article,
+  .article:hover {
+    transform: none;
+  }
+
+  .article::after {
+    display: none;
+  }
+}
+
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    translate: 0 12px;
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    translate: 0 0;
   }
 }
 
