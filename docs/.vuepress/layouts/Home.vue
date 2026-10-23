@@ -17,6 +17,7 @@ const router = useRouter();
 const initialExplore = route.query.view === 'explore';
 const leaving = ref(false);
 const exploreOpen = ref(false);
+const explorePrepared = ref(false);
 const homeVisible = ref(!initialExplore);
 const exploreListView = ref(false);
 const explorePanelOpen = ref(false);
@@ -35,8 +36,14 @@ const sharedTitleStyle = ref({
   transition: 'none',
 });
 let exploreTimer = 0;
+let prepareIdle = 0;
+let prepareTimer = 0;
 let exploreTargetRect = null;
 
+
+const prepareExplore = () => {
+  explorePrepared.value = true;
+};
 
 const setDocumentTitle = (title) => {
   if (typeof document !== 'undefined') document.title = title;
@@ -197,6 +204,8 @@ const openExplore = async (animate = true, updateUrl = true) => {
   exploreListView.value = isMobile;
   explorePanelOpen.value = false;
 
+  prepareExplore();
+
   if (updateUrl) {
     await router.push({
       path: '/',
@@ -326,6 +335,12 @@ onMounted(() => {
   window.addEventListener('resize', onResize);
   document.documentElement.addEventListener('mouseleave', resetTilt);
 
+  if ('requestIdleCallback' in window) {
+    prepareIdle = window.requestIdleCallback(prepareExplore, { timeout: 1200 });
+  } else {
+    prepareTimer = window.setTimeout(prepareExplore, 500);
+  }
+
   nextTick(() => {
     if (initialExplore) {
       void openExplore(false, false);
@@ -342,6 +357,8 @@ onUnmounted(() => {
   document.documentElement.removeEventListener('mouseleave', resetTilt);
   window.clearTimeout(exploreTimer);
   window.clearTimeout(titleClipTimer);
+  window.clearTimeout(prepareTimer);
+  if (prepareIdle) window.cancelIdleCallback(prepareIdle);
 });
 </script>
 
@@ -406,8 +423,9 @@ onUnmounted(() => {
             href="/explore/"
             class="hero__enter"
             @click="goExplore"
-            @pointerenter="preloadExplore"
-            @focus="preloadExplore"
+            @pointerenter="prepareExplore"
+            @focus="prepareExplore"
+            @pointerdown="prepareExplore"
           >
             <span>EXPLORE</span>
             <svg
@@ -431,10 +449,17 @@ onUnmounted(() => {
       <SpaceTitle :style="sharedTitleStyle" />
       <SharedThemeToggle />
 
-      <div v-if="exploreOpen" class="explore-overlay">
+      <div
+        v-if="exploreOpen || explorePrepared"
+        class="explore-overlay"
+        :class="{ 'is-prepared-hidden': !exploreOpen }"
+        :inert="!exploreOpen"
+        :aria-hidden="!exploreOpen"
+      >
         <ExploreView
           embedded
           hide-title
+          :active="exploreOpen"
           :bloom="exploreBloom"
           :reverse="exploreReverse"
           @state="onExploreState"

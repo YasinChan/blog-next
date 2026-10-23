@@ -17,6 +17,10 @@ const props = defineProps({
   hideTitle: Boolean,
   bloom: Boolean,
   reverse: Boolean,
+  active: {
+    type: Boolean,
+    default: true,
+  },
 });
 const emit = defineEmits(['close', 'state']);
 
@@ -483,6 +487,18 @@ const tick = (now) => {
   rafId = requestAnimationFrame(tick);
 };
 
+const startTick = () => {
+  if (rafId || !props.active) return;
+  lastFrame = 0;
+  rafId = requestAnimationFrame(tick);
+};
+
+const stopTick = () => {
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = 0;
+  lastFrame = 0;
+};
+
 watch(
   activeKey,
   async (key) => {
@@ -502,6 +518,7 @@ watch(
 const updateScrollLock = () => {
   if (typeof document === 'undefined') return;
   const lock =
+    props.active &&
     viewMode.value === 'orbit' &&
     window.matchMedia('(min-width: 768px)').matches;
   document.documentElement.classList.toggle('explore-orbit-lock', lock);
@@ -509,12 +526,29 @@ const updateScrollLock = () => {
 
 watch(viewMode, updateScrollLock);
 
+watch(
+  () => props.active,
+  (active) => {
+    if (active) {
+      startTick();
+    } else {
+      stopTick();
+      activeKey.value = null;
+      lastTrigger.value = null;
+      viewMode.value = 'orbit';
+      dragging.value = false;
+      velocity = 0;
+    }
+    updateScrollLock();
+  },
+);
+
 watch([viewMode, activeKey], () => {
   emit('state', { view: viewMode.value, panel: !!activeKey.value });
 });
 
 onMounted(() => {
-  rafId = requestAnimationFrame(tick);
+  if (props.active) startTick();
   updateScrollLock();
   emit('state', { view: viewMode.value, panel: !!activeKey.value });
   window.addEventListener('resize', updateScrollLock);
@@ -542,7 +576,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  cancelAnimationFrame(rafId);
+  stopTick();
   document.documentElement.classList.remove('explore-orbit-lock');
   window.removeEventListener('resize', updateScrollLock);
   window.removeEventListener('pointermove', onPointerMove);

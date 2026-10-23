@@ -1019,3 +1019,14 @@ html[data-theme='light'] .orbit-scanner__dot {
     display: none;
   }
 }
+
+
+/* Keep the prepared Explore layer warm but invisible until it opens. */
+.explore-overlay.is-prepared-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.orbit-stage {
+  will-change: transform, opacity;
+}
