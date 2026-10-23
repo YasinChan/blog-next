@@ -589,6 +589,17 @@ onBeforeUnmount(() => {
             </a>
 
             <div class="explore__actions">
+              <a
+                class="explore__github"
+                href="https://github.com/YasinChan"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub"
+                title="GitHub"
+              >
+                <ExploreIcon name="github" />
+                <span>GitHub</span>
+              </a>
 
               <button
                 class="view-toggle"
